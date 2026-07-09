@@ -146,6 +146,20 @@
   }
   .mode-locked { font-size: 12.5px; color: var(--muted); }
 
+  /* 連線對戰房間面板 */
+  .modebtn.online.on { border-color: var(--good); background: var(--good-soft); color: var(--good); }
+  .roompanel { display: none; flex-direction: column; gap: 10px; padding: 12px; border: 1.5px dashed var(--line); border-radius: 10px; }
+  .roompanel.show { display: flex; }
+  .roomrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .roomrow input { flex: 1; min-width: 90px; padding: 9px 12px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); font-size: 15px; }
+  .roombtn { padding: 9px 14px; border-radius: 8px; border: 1.5px solid var(--good); background: var(--good-soft); color: var(--good); font-weight: 700; font-size: 14.5px; cursor: pointer; white-space: nowrap; }
+  .roombtn:disabled { opacity: .5; cursor: default; }
+  .roomcode { font-size: 26px; font-weight: 800; letter-spacing: .28em; text-align: center; color: var(--good); font-variant-numeric: tabular-nums; }
+  .roomstatus { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.5; }
+  .roomstatus.live { color: var(--good); font-weight: 700; }
+  .roomstatus.err { color: var(--bad); font-weight: 700; }
+  .waiting { font-size: 13px; color: var(--muted); margin: 8px 0 0; font-style: italic; }
+
   .qcard { border-top: 1px solid var(--line); padding: 16px 0 6px; }
   .qcard:first-of-type { border-top: none; padding-top: 4px; }
   .qnum { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: .06em; }
@@ -249,13 +263,26 @@
     <div class="modebar" id="modebar">
       <div class="modebtns">
         <button class="modebtn on" id="soloBtn" type="button">🙋 單人</button>
-        <button class="modebtn" id="duoBtn" type="button">💑 雙人對戰</button>
+        <button class="modebtn" id="duoBtn" type="button">💑 同機雙人</button>
+        <button class="modebtn online" id="onlineBtn" type="button">🌐 連線對戰</button>
       </div>
       <div class="names" id="names">
         <input id="n1" maxlength="8" value="玩家 1" aria-label="玩家一暱稱">
         <input id="n2" maxlength="8" value="玩家 2" aria-label="玩家二暱稱">
       </div>
-      <div class="mode-locked" id="modeHint">雙人模式：兩人輪流作答同一題，都答完才公布答案、看誰對。</div>
+      <div class="roompanel" id="roompanel">
+        <div class="roomrow">
+          <input id="myname" maxlength="8" value="我" placeholder="你的暱稱" aria-label="你的暱稱">
+        </div>
+        <div class="roomrow">
+          <button class="roombtn" id="createRoom" type="button">＋ 建立房間</button>
+          <input id="joincode" maxlength="4" placeholder="輸入房號" aria-label="房間代號" style="text-transform:uppercase">
+          <button class="roombtn" id="joinRoom" type="button">加入</button>
+        </div>
+        <div class="roomcode" id="roomcode" hidden></div>
+        <div class="roomstatus" id="roomstatus">兩支手機都選「🌐 連線對戰」，一人按「建立房間」把房號報給對方，另一人輸入房號後按「加入」。</div>
+      </div>
+      <div class="mode-locked" id="modeHint">單人模式：點選答案立刻公布對錯與解析。</div>
     </div>
     <div id="quizBox"></div>
   </section>
@@ -291,6 +318,7 @@
   </footer>
 </div>
 
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script>
 const LESSON = {"day": 1, "date": "2026-07-08", "weekday": "週三", "theme": "科技與硬體產業", "video": {"title": "Why your phone battery gets worse over time", "channel": "TED-Ed", "duration": "約 5 分鐘", "url": "https://www.youtube.com/watch?v=vc8UBSp1tz0", "intro": "你的手機是不是也越充越沒力？這支動畫用 5 分鐘講清楚電池變差的原因——做硬體的人看了會特別有感。建議開英文字幕（CC）。", "tasks": ["注意聽影片怎麼描述電池「充電—放電」的過程，等一下的短文第二段會呼應這件事", "記下一個影片有提到、但短文沒講到的電池知識，看完考考對方"]}, "article": {"title": "Why Is My Phone Battery So Bad Now?", "paragraphs": ["Two years ago, your phone was fast and strong. Now the battery dies before lunch. What happened? The battery inside your phone gets old, just like people do.", "A phone battery is a small box of chemicals. When you charge it, the chemicals move one way. When you use the phone, they move back. After many charges, the chemicals get tired. Then the battery cannot hold much power, so it does not last long.", "Heat is the biggest enemy. Do not leave your phone in a hot car. Also, try to avoid charging it from 0% to 100% every time. Small charges are a good habit.", "One day, every battery gets weak. Then you can replace the battery, or buy a new device. But with good habits, your battery can stay healthy for a long time — just like love."]}, "vocab": [{"word": "battery", "pos": "n.", "phonetic": "ˈbætərɪ", "zh": "電池", "example": "The battery inside your phone gets old.", "example_zh": "你手機裡的電池會變老。"}, {"word": "charge", "pos": "v.", "phonetic": "tʃɑrdʒ", "zh": "充電", "example": "When you charge it, the chemicals move one way.", "example_zh": "充電時，化學物質往一個方向移動。"}, {"word": "last", "pos": "v.", "phonetic": "læst", "zh": "持續、撐（一段時間）", "example": "The battery does not last long.", "example_zh": "電池撐不久。"}, {"word": "heat", "pos": "n.", "phonetic": "hit", "zh": "高溫、熱", "example": "Heat is the biggest enemy.", "example_zh": "高溫是（電池）最大的敵人。"}, {"word": "avoid", "pos": "v.", "phonetic": "əˈvɔɪd", "zh": "避免", "example": "Try to avoid charging it from 0% to 100% every time.", "example_zh": "盡量避免每次都從 0% 充到 100%。"}, {"word": "habit", "pos": "n.", "phonetic": "ˈhæbɪt", "zh": "習慣", "example": "Small charges are a good habit.", "example_zh": "少量多次充電是好習慣。"}, {"word": "replace", "pos": "v.", "phonetic": "rɪˈples", "zh": "更換", "example": "You can replace the battery.", "example_zh": "你可以更換電池。"}, {"word": "device", "pos": "n.", "phonetic": "dɪˈvaɪs", "zh": "裝置、設備", "example": "You can replace the battery, or buy a new device.", "example_zh": "你可以換電池，或買一台新裝置。"}], "quiz": [{"q": "What happens to a phone battery after many charges?", "options": ["It becomes bigger.", "The chemicals get tired, and it holds less power.", "It charges faster than before.", "It becomes more expensive."], "answer": 1, "explain": "答案在第二段：After many charges, the chemicals get tired. Then the battery cannot hold much power.（充放電很多次之後，化學物質會「累了」，電池存不住電。）選項 B 是這兩句的換句話說。A、C、D 文章都沒提到。"}, {"q": "What is the biggest enemy of a phone battery?", "options": ["Water", "Heat", "Music", "Games"], "answer": 1, "explain": "第三段開頭直接說：Heat is the biggest enemy.（高溫是最大的敵人。）所以答案是 Heat。其他三個選項文章完全沒提。"}, {"q": "What charging habit does the article suggest?", "options": ["Charge from 0% to 100% every time.", "Never charge your phone at night.", "Charge a little bit, more often.", "Use two chargers at the same time."], "answer": 2, "explain": "第三段說 try to avoid charging it from 0% to 100% every time. Small charges are a good habit.（避免每次都從 0 充到滿；少量多次是好習慣。）C 的 a little bit, more often 就是 small charges 的意思。A 剛好是文章叫你避免的做法，小心陷阱。"}, {"q": "What is this article mainly about?", "options": ["How to buy a cheap phone.", "Why batteries get weak, and how to keep them healthy.", "The history of the smartphone.", "How to fix a broken screen."], "answer": 1, "explain": "主旨題看全文：第一、二段講電池為什麼變差，第三、四段講怎麼保養。合起來就是 B。A、C、D 都只是無關的細節，文章沒有講。"}, {"q": "In the article, the word \"replace\" is closest in meaning to…", "options": ["to clean something", "to put a new one in the place of the old one", "to sell something", "to break something"], "answer": 1, "explain": "第四段：you can replace the battery, or buy a new device.（你可以「更換」電池，或買新裝置。）replace＝把舊的換成新的，所以是 B。從前後文看，電池弱掉之後的選擇是「換電池」或「買新機」，也推得出來。"}], "review": [], "weekly": [], "grammar": [{"name": "祈使句 Imperatives（下指令、給建議）", "sentence": "Do not leave your phone in a hot car.", "highlight": "Do not leave", "rule": "直接用動詞原形開頭、不放主詞，就是在下指令或給建議；否定就在前面加 Don't（Do not）。就像 SOP 上的步驟只寫「Check the cable.」，不會寫「你去檢查線材」。", "examples": [{"en": "Turn off the power first.", "zh": "先把電源關掉。"}, {"en": "Don't touch the board when it is hot.", "zh": "板子還燙的時候不要摸。"}], "mistake": "多加主詞說成 You don't leave your phone...，就變成「你（平常）不會把手機留在車上」的描述句，不是建議了。"}, {"name": "最高級 Superlatives（最……的）", "sentence": "Heat is the biggest enemy.", "highlight": "the biggest", "rule": "三個以上互相比、要講「第一名」時，用 the＋形容詞字尾加 -est（比較長的字改用 the most ...）。the 不能省——它像料號的前綴，少了就不完整。", "examples": [{"en": "This is the cheapest module on the list.", "zh": "這是清單上最便宜的模組。"}, {"en": "Friday is the busiest day in our office.", "zh": "週五是我們辦公室最忙的一天。"}], "mistake": "忘記加 the，說成 Heat is biggest enemy——最高級前面幾乎都要有 the。"}], "closing": "第一天完成！電池要好好保養，感情也是——少量多次，細水長流 🔋"};
 
@@ -371,15 +399,18 @@ const nameOf = (p) => esc((p === 0 ? $('n1').value : $('n2').value).trim() || (p
 
 $('soloBtn').addEventListener('click', () => setMode('solo'));
 $('duoBtn').addEventListener('click', () => setMode('duo'));
+$('onlineBtn').addEventListener('click', () => setMode('online'));
 function setMode(m) {
   if (state.locked) return;
   state.mode = m;
   $('soloBtn').classList.toggle('on', m === 'solo');
   $('duoBtn').classList.toggle('on', m === 'duo');
+  $('onlineBtn').classList.toggle('on', m === 'online');
   $('names').classList.toggle('show', m === 'duo');
-  $('modeHint').textContent = m === 'duo'
-    ? '雙人模式：兩人輪流作答同一題，都答完才公布答案、看誰對。先填好暱稱！'
-    : '單人模式：點選答案立刻公布對錯與解析。';
+  $('roompanel').classList.toggle('show', m === 'online');
+  if (m === 'duo') $('modeHint').textContent = '同機雙人：兩人用這一支手機輪流作答，都答完才公布、看誰對。先填好暱稱！';
+  else if (m === 'online') $('modeHint').textContent = '連線對戰：各自用自己的手機，一人建房、一人輸房號加入，答題即時同步比分。';
+  else $('modeHint').textContent = '單人模式：點選答案立刻公布對錯與解析。';
   document.querySelectorAll('.turn').forEach(el => { el.hidden = (m !== 'duo'); });
   updateTurnLabels();
 }
@@ -413,6 +444,9 @@ function onPick(e) {
   if (!btn || btn.disabled) return;
   const g = state.groups[+btn.dataset.g];
   if (!g || g.done) return;
+
+  if (state.mode === 'online') { onPickOnline(btn, g); return; }
+
   if (!state.locked) { state.locked = true; $('modeHint').textContent = '測驗進行中，模式已鎖定。'; $('scorebar').classList.add('show'); renderScore(); }
 
   const oi = +btn.dataset.o;
@@ -472,6 +506,9 @@ function renderScore() {
   const bar = $('scorebar');
   if (state.mode === 'solo') {
     bar.innerHTML = '🙋 ' + state.score.solo + ' 分 <span style="color:var(--muted)">（' + state.answered + '/' + state.total + ' 題）</span>';
+  } else if (state.mode === 'online') {
+    const partner = net.partnerId ? esc(net.partnerName) : '（等待中）';
+    bar.innerHTML = '<span>' + esc(net.myName) + ' ' + net.scoreMe + '</span><span style="color:var(--muted)">vs</span><span>' + partner + ' ' + net.scorePartner + '</span>';
   } else {
     bar.innerHTML = '<span>' + nameOf(0) + ' ' + state.score.p1 + '</span><span style="color:var(--muted)">vs</span><span>' + nameOf(1) + ' ' + state.score.p2 + '</span>';
   }
@@ -484,6 +521,12 @@ function finish() {
     const pct = state.score.solo / state.total;
     const msg = pct === 1 ? '全對！太強了 🎉' : pct >= 0.7 ? '很不錯，錯的看解析補起來 💪' : '沒關係，解析看完就是你的了 📖';
     html = '<div class="big">' + state.score.solo + ' / ' + state.total + '</div><div class="verdict">' + msg + '</div>';
+  } else if (state.mode === 'online') {
+    const a = net.scoreMe, b = net.scorePartner;
+    const verdict = a === b ? '平手！一起看解析 🤝'
+      : (a > b ? esc(net.myName) : esc(net.partnerName)) + ' 獲勝 🏆 輸的人記得請喝飲料（開玩笑的，一起看解析）';
+    html = '<div class="big">' + a + '：' + b + '</div>' +
+           '<div class="verdict">' + esc(net.myName) + ' vs ' + esc(net.partnerName) + ' — ' + verdict + '</div>';
   } else {
     const a = state.score.p1, b = state.score.p2;
     const verdict = a === b ? '平手！一起看解析 🤝'
@@ -493,6 +536,146 @@ function finish() {
   }
   s.querySelector('#summaryBody').innerHTML = html;
   s.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/* ---------- 連線對戰（跨裝置即時同步，走公開 MQTT 中繼） ---------- */
+const net = {
+  client: null, room: null, connected: false, started: false,
+  myId: 'p' + Math.random().toString(36).slice(2, 8),
+  myName: '我', partnerId: null, partnerName: '對方',
+  answers: {}, revealed: new Set(), scoreMe: 0, scorePartner: 0
+};
+const BROKER = 'wss://broker.emqx.io:8084/mqtt';
+const roomTopic = () => 'de/room/' + net.room;
+
+function genCode() {
+  const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';  // 去掉易混的 I O 0 1
+  let s = ''; for (let i = 0; i < 4; i++) s += c[Math.floor(Math.random() * c.length)];
+  return s;
+}
+function setStatus(msg, cls) { const el = $('roomstatus'); el.className = 'roomstatus' + (cls ? ' ' + cls : ''); el.textContent = msg; }
+function setRoomLive() {
+  setStatus('已連上！你是「' + net.myName + '」，對手是「' + net.partnerName + '」。開始作答，比分即時同步。', 'live');
+}
+
+$('createRoom').addEventListener('click', () => startOnline(genCode(), true));
+$('joinRoom').addEventListener('click', () => {
+  const code = ($('joincode').value || '').trim().toUpperCase();
+  if (code.length < 4) { setStatus('請先輸入 4 位房號', 'err'); return; }
+  startOnline(code, false);
+});
+
+function startOnline(code, isCreator) {
+  if (net.started) return;
+  if (typeof mqtt === 'undefined') {
+    setStatus('連線服務載入失敗（可能是網路擋住），請改用「💑 同機雙人」。', 'err'); return;
+  }
+  net.started = true;
+  net.myName = (($('myname').value || '').trim() || '我').slice(0, 8);
+  net.room = code;
+  state.locked = true;  // 鎖定模式，開賽後不再切換
+  ['createRoom', 'joinRoom', 'myname', 'joincode'].forEach(id => { $(id).disabled = true; });
+  setStatus('連線中…');
+
+  net.client = mqtt.connect(BROKER, {
+    clientId: 'de_' + net.myId, clean: true, connectTimeout: 8000, reconnectPeriod: 4000
+  });
+  net.client.on('connect', () => {
+    net.connected = true;
+    net.client.subscribe(roomTopic(), () => {
+      netPublish({ t: 'hello', id: net.myId, name: net.myName });
+      if (isCreator) { $('roomcode').hidden = false; $('roomcode').textContent = code; }
+      if (!net.partnerId) setStatus(isCreator ? ('房號：' + code + '　把它報給對方，等加入…') : ('已加入 ' + code + '，等對方…'));
+      $('scorebar').classList.add('show'); renderScore();
+    });
+  });
+  net.client.on('message', (t, payload) => {
+    let m; try { m = JSON.parse(payload.toString()); } catch (e) { return; }
+    onNetMessage(m);
+  });
+  net.client.on('error', () => setStatus('連線出錯，請重新整理再試，或改用同機雙人。', 'err'));
+  net.client.on('close', () => { net.connected = false; });
+}
+
+function netPublish(obj) {
+  if (net.client && net.connected) net.client.publish(roomTopic(), JSON.stringify(obj));
+}
+
+function bindPartner(id, name) {
+  if (net.partnerId || id === net.myId) return;
+  net.partnerId = id;
+  net.partnerName = (name || '對方').slice(0, 8);
+  setRoomLive(); renderScore();
+  // 對手加入前我可能已作答，補送給對方，並嘗試把等待中的題目揭曉
+  Object.keys(net.answers).forEach(q => {
+    const o = net.answers[q][net.myId];
+    if (o != null) netPublish({ t: 'answer', id: net.myId, q: +q, opt: o });
+    maybeRevealOnline(+q, null);
+  });
+}
+
+function onNetMessage(m) {
+  if (!m || m.id === net.myId) return;
+  if (m.t === 'hello') {
+    bindPartner(m.id, m.name);
+    netPublish({ t: 'hi', id: net.myId, name: net.myName });  // 讓對方也認得我
+    return;
+  }
+  if (m.t === 'hi') { bindPartner(m.id, m.name); return; }
+  if (m.t === 'answer') {
+    bindPartner(m.id, m.name);
+    recordAnswer(m.q, m.id, m.opt);
+    maybeRevealOnline(m.q, null);
+    return;
+  }
+}
+
+function onPickOnline(btn, g) {
+  if (!net.connected) { setStatus('尚未連上中繼，請稍候或重新整理。', 'err'); return; }
+  if (!net.partnerId) { setStatus('還沒連上對方——確認兩支手機用同一個房號。', 'err'); return; }
+  const q = +btn.dataset.g;
+  if (net.answers[q] && net.answers[q][net.myId] != null) return;  // 已作答
+  const oi = +btn.dataset.o;
+  recordAnswer(q, net.myId, oi);
+  netPublish({ t: 'answer', id: net.myId, q: q, opt: oi });
+  const card = btn.closest('.qcard');
+  const partnerDone = net.answers[q] && net.answers[q][net.partnerId] != null;
+  if (!partnerDone) markMyPickOnline(card, oi);
+  maybeRevealOnline(q, card);
+}
+
+function recordAnswer(q, id, opt) {
+  if (!net.answers[q]) net.answers[q] = {};
+  net.answers[q][id] = opt;
+}
+
+function markMyPickOnline(card, oi) {
+  card.querySelectorAll('.opt').forEach(b => {
+    b.disabled = true;
+    if (+b.dataset.o === oi) b.querySelector('.tagbox').innerHTML = '<span class="ptag">' + esc(net.myName) + '</span>';
+  });
+  if (!card.querySelector('.waiting')) {
+    const w = document.createElement('p');
+    w.className = 'waiting'; w.textContent = '已作答，等對方作答中…';
+    card.querySelector('.opts').after(w);
+  }
+}
+
+function maybeRevealOnline(q, card) {
+  const a = net.answers[q];
+  if (!a || net.partnerId == null) return;
+  if (a[net.myId] == null || a[net.partnerId] == null) return;
+  if (net.revealed.has(q)) return;
+  net.revealed.add(q);
+  if (!card) { const ob = document.querySelector('.opt[data-g="' + q + '"]'); card = ob ? ob.closest('.qcard') : null; }
+  if (!card) return;
+  const w = card.querySelector('.waiting'); if (w) w.remove();
+  const g = state.groups[q];
+  g.done = true;
+  if (a[net.myId] === g.q.answer) net.scoreMe++;
+  if (a[net.partnerId] === g.q.answer) net.scorePartner++;
+  reveal(card, g, [[net.myName, a[net.myId]], [net.partnerName, a[net.partnerId]]]);
+  renderScore();
 }
 
 buildGroup(LESSON.quiz, 'quizBox');

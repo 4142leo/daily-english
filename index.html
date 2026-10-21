@@ -351,6 +351,7 @@
   .pw .sym { font-weight: 700; color: var(--accent); margin-right: 2px; }
   .pw.cmp { border-style: dashed; color: var(--muted); }
   .pw .cmplbl { font-size: 11px; color: var(--muted); }
+  #toolsCard .reviewbtn { margin: 0 0 8px; }
   .prule { margin: 0 0 14px; }
   .prule h3 { font-size: 16px; margin: 0 0 4px; }
   .prule p { font-size: 14.5px; margin: 0; }
@@ -415,6 +416,23 @@
     <div class="chips" id="chips"></div>
     <div class="lessonnav" id="lessonNav"></div>
   </header>
+
+  <section class="card" id="toolsCard">
+    <p class="eyebrow">單字複習＋發音教室 · Review &amp; Sounds</p>
+    <details class="pclass">
+      <summary>KK 音標表（約 40 個音，點字聽發音）</summary>
+      <p class="pnote">KK 音標就是英文的注音符號。紅字是發這個音的字母；瀏覽器沒辦法單獨唸一個音，所以用範例字示範。字典裡的 ˋ 標在重音節前面。</p>
+      <h3 class="psub">母音</h3>
+      <div class="pwords" id="kkVowels"></div>
+      <h3 class="psub">子音</h3>
+      <div class="pwords" id="kkConsonants"></div>
+    </details>
+    <details class="pclass">
+      <summary>拼字規則表（看拼字猜讀音）</summary>
+      <p class="pnote">多數字照規則唸；標「先學」的是最常用的幾條。遇到不照規則的字，先聽再看，直接背。</p>
+      <div id="ruleList"></div>
+    </details>
+  </section>
 
   <div class="scorebar" id="scorebar"></div>
 
@@ -489,23 +507,6 @@
   <section class="card" id="phonicsCard" hidden>
     <p class="eyebrow"><b>06</b> 今日發音規則 · Phonics</p>
     <div id="phonicsBox"></div>
-  </section>
-
-  <section class="card">
-    <p class="eyebrow"><b>07</b> 發音教室 · Sounds</p>
-    <details class="pclass">
-      <summary>KK 音標表（約 40 個音，點字聽發音）</summary>
-      <p class="pnote">KK 音標就是英文的注音符號。紅字是發這個音的字母；瀏覽器沒辦法單獨唸一個音，所以用範例字示範。字典裡的 ˋ 標在重音節前面。</p>
-      <h3 class="psub">母音</h3>
-      <div class="pwords" id="kkVowels"></div>
-      <h3 class="psub">子音</h3>
-      <div class="pwords" id="kkConsonants"></div>
-    </details>
-    <details class="pclass">
-      <summary>拼字規則表（看拼字猜讀音）</summary>
-      <p class="pnote">多數字照規則唸；標「先學」的是最常用的幾條。遇到不照規則的字，先聽再看，直接背。</p>
-      <div id="ruleList"></div>
-    </details>
   </section>
 
   <footer class="end">
@@ -1308,10 +1309,11 @@ $('exportBtn').addEventListener('click', () => exportNote(LESSON));
 
 /* ---------- 單字複習（字卡：複習學過課程的單字）---------- */
 (function vocabReview() {
-  const card = $('vocabBox').closest('.card');
+  // 入口放在頁面最上方的「單字複習＋發音教室」卡片，標題下面第一個
+  const card = $('toolsCard');
   const btn = document.createElement('button');
   btn.className = 'reviewbtn'; btn.type = 'button'; btn.textContent = '🔁 複習學過的單字';
-  card.appendChild(btn);
+  card.querySelector('.eyebrow').after(btn);
   const panel = document.createElement('div'); panel.className = 'revpanel'; document.body.appendChild(panel);
   let scope = 'all', deck = [], idx = 0, flipped = false;
 

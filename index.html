@@ -31,8 +31,13 @@
       ],
       "vocab": [
         { "word": "renovation", "pos": "n.", "level": "600+", "zh": "翻新、整修",
-          "example": "The office renovation will begin next Monday.", "example_zh": "辦公室整修將於下週一開始。" }
+          "example": "The office renovation will begin next Monday.", "example_zh": "辦公室整修將於下週一開始。",
+          "kk": "[ˏrɛnəˋveʃən]",          // KK 音標（選填，舊課沒有就不顯示）
+          "syll": "ren·o·VA·tion",          // 音節用 · 分隔，重音節全大寫（選填）
+          "phonics": "-tion 唸 [ʃən]" }      // 一行拼字提示；不照規則就寫「例外字」（選填）
       ],
+      "phonics": { "rule": "magic-e",       // 今日發音規則：id 必須是 PHONICS_RULES 裡的一條（選填）
+                   "words": ["m{a}k{e}", "t{i}m{e}"] }, // 今天文章裡符合規則的字，{ } 標出對應字母
       "review": [ /* 同 quiz 格式，從 Obsidian vault 撈的舊筆記複習題；沒有相關筆記就給 [] */ ],
       "closing": "今日收尾的一句鼓勵（中文）"
     }
@@ -330,6 +335,31 @@
   .vzh { font-size: 15px; color: var(--accent); font-weight: 600; margin-left: auto; }
   .vex { font-family: Georgia, serif; font-size: 15px; margin: 8px 0 0; line-height: 1.7; }
   .vexzh { font-size: 13px; color: var(--muted); }
+  .vpron { display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline; margin-top: 4px; }
+  .vkk { font-size: 15px; color: var(--ink); }
+  .vsyl { font-size: 14px; color: var(--muted); letter-spacing: .02em; }
+  .vsyl b, .pw b { color: var(--bad); }
+  .vphon { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* 發音 */
+  .pwords { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
+  .pw {
+    display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+    color: var(--ink); font-size: 15px; cursor: pointer;
+  }
+  .pw .sym { font-weight: 700; color: var(--accent); margin-right: 2px; }
+  .pw.cmp { border-style: dashed; color: var(--muted); }
+  .pw .cmplbl { font-size: 11px; color: var(--muted); }
+  .prule { margin: 0 0 14px; }
+  .prule h3 { font-size: 16px; margin: 0 0 4px; }
+  .prule p { font-size: 14.5px; margin: 0; }
+  .pstar { font-size: 11.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 1px 8px; margin-left: 6px; }
+  .ptoday { background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; margin-top: 12px; }
+  .ptoday .lbl { font-size: 13px; font-weight: 700; color: var(--accent); }
+  details.pclass > summary { cursor: pointer; font-size: 15px; font-weight: 700; padding: 6px 0; }
+  details.pclass h3.psub { font-size: 14px; color: var(--muted); margin: 14px 0 6px; }
+  .pnote { font-size: 13.5px; color: var(--muted); margin: 6px 0 0; }
 
   footer.end { text-align: center; color: var(--muted); font-size: 14.5px; padding: 8px 16px 0; }
   footer.end .closing { color: var(--ink); font-size: 15.5px; margin-bottom: 6px; }
@@ -456,10 +486,32 @@
     <div class="vgrid" id="vocabBox"></div>
   </section>
 
+  <section class="card" id="phonicsCard" hidden>
+    <p class="eyebrow"><b>06</b> 今日發音規則 · Phonics</p>
+    <div id="phonicsBox"></div>
+  </section>
+
+  <section class="card">
+    <p class="eyebrow"><b>07</b> 發音教室 · Sounds</p>
+    <details class="pclass">
+      <summary>KK 音標表（約 40 個音，點字聽發音）</summary>
+      <p class="pnote">KK 音標就是英文的注音符號。紅字是發這個音的字母；瀏覽器沒辦法單獨唸一個音，所以用範例字示範。字典裡的 ˋ 標在重音節前面。</p>
+      <h3 class="psub">母音</h3>
+      <div class="pwords" id="kkVowels"></div>
+      <h3 class="psub">子音</h3>
+      <div class="pwords" id="kkConsonants"></div>
+    </details>
+    <details class="pclass">
+      <summary>拼字規則表（看拼字猜讀音）</summary>
+      <p class="pnote">多數字照規則唸；標「先學」的是最常用的幾條。遇到不照規則的字，先聽再看，直接背。</p>
+      <div id="ruleList"></div>
+    </details>
+  </section>
+
   <footer class="end">
     <div class="closing" id="closing"></div>
     <div>明天同一時間，同一個網址見 🎯</div>
-    <div style="margin-top:10px;font-size:11px;color:var(--muted);opacity:.7">版本 v2026-08-10a</div>
+    <div style="margin-top:10px;font-size:11px;color:var(--muted);opacity:.7">版本 v2026-10-21a</div>
   </footer>
 </div>
 
@@ -1051,6 +1103,10 @@ setMode('solo');
         '<span class="vpos">' + esc(v.pos) + '</span>' +
         '<span class="vzh">' + esc(v.zh) + '</span>' +
       '</div>' +
+      ((v.kk || v.syll) ? '<div class="vpron">' +
+        (v.kk ? '<span class="vkk">' + esc(v.kk) + '</span>' : '') +
+        (v.syll ? '<span class="vsyl">' + sylHtml(v.syll) + '</span>' : '') + '</div>' : '') +
+      (v.phonics ? '<div class="vphon">💡 ' + esc(v.phonics) + '</div>' : '') +
       '<p class="vex">' + esc(v.example) + '<button class="mini-say" type="button" data-se="' + i + '" aria-label="唸例句">🔊</button></p>' +
       '<div class="vexzh">' + esc(v.example_zh) + '</div>' +
     '</div>'
@@ -1067,6 +1123,85 @@ setMode('solo');
   })();
 })();
 
+/* ---------- 發音（今日規則＋發音教室）---------- */
+// "ren·o·VA·tion" -> 重音節（全大寫那段）加粗標紅，其餘照原樣
+function sylHtml(s) {
+  return String(s).split('·').map(p =>
+    (/[A-Z]/.test(p) && p === p.toUpperCase()) ? '<b>' + esc(p.toLowerCase()) + '</b>' : esc(p)
+  ).join('·');
+}
+// "m{a}k{e}" -> 大括號裡的字母標紅；朗讀時去掉大括號
+const plain = (w) => String(w).replace(/[{}]/g, '');
+const markHtml = (w) => esc(w).replace(/\{([^}]*)\}/g, '<b>$1</b>');
+// 例字開頭加 "-" ＝ 不套用這條規則的對照字，畫面上標「對照」
+const pwBtn = (w, sym) => {
+  const cmp = String(w).charAt(0) === '-'; if (cmp) w = String(w).slice(1);
+  return '<button class="pw' + (cmp ? ' cmp' : '') + '" type="button" data-say="' + esc(plain(w)) + '">' +
+    (sym ? '<span class="sym">' + esc(sym) + '</span>' : '') + '<span>' + markHtml(w) + '</span>' +
+    (cmp ? '<span class="cmplbl">對照</span>' : '') + '🔊</button>';
+};
+
+const KK_VOWELS = [
+  ['[i]', 's{ee}'], ['[ɪ]', 's{i}t'], ['[e]', 'c{a}ke'], ['[ɛ]', 'b{e}d'], ['[æ]', 'c{a}t'],
+  ['[ɑ]', 'h{o}t'], ['[ɔ]', 'l{aw}'], ['[o]', 'g{o}'], ['[ʊ]', 'b{oo}k'], ['[u]', 'f{oo}d'],
+  ['[ʌ]', 'c{u}p'], ['[ə]', '{a}bout'], ['[ɝ]', 'b{ir}d'], ['[ɚ]', 'teach{er}'],
+  ['[aɪ]', 'm{y}'], ['[aʊ]', 'c{ow}'], ['[ɔɪ]', 'b{oy}']
+];
+const KK_CONSONANTS = [
+  ['[p]', '{p}en'], ['[b]', '{b}ag'], ['[t]', '{t}en'], ['[d]', '{d}og'], ['[k]', '{k}ey'], ['[g]', '{g}o'],
+  ['[f]', '{f}ish'], ['[v]', '{v}an'], ['[θ]', '{th}ink'], ['[ð]', '{th}is'], ['[s]', '{s}un'], ['[z]', '{z}oo'],
+  ['[ʃ]', '{sh}e'], ['[ʒ]', 'mea{s}ure'], ['[h]', '{h}at'], ['[tʃ]', '{ch}air'], ['[dʒ]', '{j}ob'],
+  ['[m]', '{m}an'], ['[n]', '{n}o'], ['[ŋ]', 'si{ng}'], ['[l]', '{l}eg'], ['[r]', '{r}ed'], ['[w]', '{w}e'], ['[j]', '{y}es']
+];
+// 拼字規則表。id 給 bank 的 lesson.phonics.rule 用，改 id 會讓舊課的今日規則對不到（卡片自動隱藏）
+const PHONICS_RULES = [
+  { id: 'short-vowel', core: true, name: '短母音', explain: '一個母音夾在子音中間，唸短音：a [æ]、e [ɛ]、i [ɪ]、o [ɑ]、u [ʌ]。',
+    ex: ['c{a}t', 'b{e}d', 's{i}t', 'h{o}t', 'c{u}p'] },
+  { id: 'magic-e', core: true, name: '字尾不發音的 e', explain: '字尾加一個不發音的 e，前面的母音改唸字母本身的名字（a→[e]、i→[aɪ]、o→[o]、u→[ju]）。常見例外：have、give、come、love。',
+    ex: ['-c{a}p', 'c{a}p{e}', '-k{i}t', 'k{i}t{e}', '-h{o}p', 'h{o}p{e}', 'c{u}t{e}'] },
+  { id: 'vowel-team', core: true, name: '兩個母音放一起', explain: 'ee、ea、ai、ay、oa 這類組合，通常唸第一個母音字母的名字。',
+    ex: ['s{ee}', 's{ea}', 'r{ai}n', 'd{ay}', 'b{oa}t'] },
+  { id: 'digraph', core: true, name: '兩個子音組合', explain: 'sh [ʃ]、ch [tʃ]、th [θ]/[ð]、ph [f]：兩個字母合起來只唸一個音。',
+    ex: ['{sh}op', '{ch}air', '{th}ink', '{th}is', '{ph}one'] },
+  { id: 'r-controlled', core: true, name: '母音後面接 r', explain: 'ar [ɑr]、or [ɔr]；er、ir、ur 三種拼法都唸 [ɝ]（輕讀時是 [ɚ]）。',
+    ex: ['c{ar}', 'f{or}', 'h{er}', 'b{ir}d', 't{ur}n'] },
+  { id: 'soft-cg', name: '軟音 c、g', explain: 'c、g 後面接 e、i、y 時變軟：c 唸 [s]、g 常唸 [dʒ]；其他情況唸 [k]、[g]。',
+    ex: ['{c}ity', '{c}ent', '{g}entle', '-{c}at', '-{g}o'] },
+  { id: 'tion', name: '-tion / -sion', explain: '-tion 唸 [ʃən]；-sion 唸 [ʃən] 或 [ʒən]。前一個音節通常是重音。',
+    ex: ['sta{tion}', 'informa{tion}', 'ten{sion}', 'deci{sion}'] },
+  { id: 'oo', name: 'oo 的兩種唸法', explain: '長音 [u]（food）或短音 [ʊ]（book），只能一個一個記，先記常見的。',
+    ex: ['f{oo}d', 'm{oo}n', 'b{oo}k', 'g{oo}d'] },
+  { id: 'ow-ou', name: 'ow / ou', explain: 'ou 常唸 [aʊ]，但例外不少（you、touch、could）；ow 可能唸 [aʊ]（cow）或 [o]（snow）。',
+    ex: ['{ou}t', 'h{ou}se', 'c{ow}', 'sn{ow}'] },
+  { id: 'final-y', name: '字尾的 y', explain: '單音節字的字尾 y 唸 [aɪ]；兩個音節以上通常唸 [ɪ]（也常標成 [i]），但 -fy、-ply 結尾的動詞唸 [aɪ]（apply、verify）。',
+    ex: ['m{y}', 'tr{y}', 'happ{y}', 'compan{y}', 'suppl{y}'] },
+  { id: 'silent', name: '不發音的字母', explain: 'kn 的 k、wr 的 w、mb 的 b、字首 h 有時不唸。',
+    ex: ['{k}now', '{w}rite', 'clim{b}', '{h}our'] },
+  { id: 'ed', name: '過去式 -ed 三種唸法', explain: '看 -ed 前面的「音」（不是字母）：[t]/[d] → [ɪd]；無聲子音（p、k、s、sh、ch、f 的音，像 fixed、laughed）→ [t]；其他 → [d]。',
+    ex: ['want{ed}', 'help{ed}', 'play{ed}'] },
+  { id: 'schwa', name: '輕讀母音 [ə]', explain: '不是重音的母音常被弱化成短短的 [ə]，不管拼的是哪個字母。英文聽起來「含糊」多半是這個原因。',
+    ex: ['{a}bout', 'b{a}nan{a}', 't{o}day', 'probl{e}m'] }
+];
+
+(function phonics() {
+  $('kkVowels').innerHTML = KK_VOWELS.map(([s, w]) => pwBtn(w, s)).join('');
+  $('kkConsonants').innerHTML = KK_CONSONANTS.map(([s, w]) => pwBtn(w, s)).join('');
+  const ruleHtml = (r) => '<div class="prule"><h3>' + esc(r.name) + (r.core ? '<span class="pstar">先學</span>' : '') + '</h3>' +
+    '<p>' + esc(r.explain) + '</p><div class="pwords">' + r.ex.map(w => pwBtn(w)).join('') + '</div></div>';
+  $('ruleList').innerHTML = PHONICS_RULES.map(ruleHtml).join('');
+
+  const p = LESSON.phonics, r = p && PHONICS_RULES.find(x => x.id === p.rule);
+  if (r) {
+    $('phonicsBox').innerHTML = ruleHtml(r) +
+      ((p.words && p.words.length) ? '<div class="ptoday"><div class="lbl">今天文章裡的字</div><div class="pwords">' +
+        p.words.map(w => pwBtn(w)).join('') + '</div></div>' : '');
+    $('phonicsCard').hidden = false;
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('.pw'); if (b) speech.speak(b.dataset.say, null, vocabSpeed.get());
+  });
+})();
+
 $('closing').textContent = LESSON.closing;
 
 /* ---------- 整理成 Obsidian 筆記（把某一課轉成 markdown）---------- */
@@ -1078,7 +1213,7 @@ function lessonNoteMarkdown(L) {
   md += '## 📖 課文\n\n';
   L.article.paragraphs.forEach(p => { md += p.en + '\n（' + p.zh + '）\n\n'; });
   md += '## 🔤 單字\n\n| 單字 | 詞性 | 分數帶 | 意思 |\n|---|---|---|---|\n';
-  L.vocab.forEach(v => { md += '| ' + v.word + ' | ' + v.pos + ' | ' + v.level + ' | ' + v.zh + ' |\n'; });
+  L.vocab.forEach(v => { md += '| ' + v.word + (v.kk ? ' ' + v.kk : '') + ' | ' + v.pos + ' | ' + v.level + ' | ' + v.zh + ' |\n'; });
   md += '\n## 📝 文法\n\n';
   L.grammar.forEach(g => {
     md += '### ' + g.name + '\n' + g.rule + '\n\n';
@@ -1217,6 +1352,7 @@ $('exportBtn').addEventListener('click', () => exportNote(LESSON));
       '<div class="rev-hint">（點卡片看意思）</div>';
     const back = sayBtn + '<div class="rev-lv">' + esc(v.level) + ' · ' + esc(v.pos) + '</div>' +
       '<div class="rev-word">' + esc(v.word) + '</div>' +
+      ((v.kk || v.syll) ? '<div class="rev-exzh">' + (v.kk ? esc(v.kk) : '') + (v.kk && v.syll ? '　' : '') + (v.syll ? sylHtml(v.syll) : '') + '</div>' : '') +
       '<div class="rev-zh">' + esc(v.zh) + '</div><div class="rev-ex">' + esc(v.example) + '</div>' +
       '<div class="rev-exzh">' + esc(v.example_zh) + '</div>';
     panel.innerHTML = '<div class="revwrap">' +
